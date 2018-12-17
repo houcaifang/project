@@ -1,0 +1,1104 @@
+<template>
+    <div class="encryption">
+        <titleInfo :titleInfo="titleMeanObj" @clickEvent="clickEvent" @search="search"></titleInfo>
+        <!--表格-->
+        <!-- <el-table
+                border
+                ref="multipleTable"
+                :data="tableData3"
+                tooltip-effect="dark"
+                style="width: 100%"
+                @selection-change="handleSelectionChange">
+            <el-table-column
+                    align="center"
+                    type="selection"
+                    width="40">
+            </el-table-column> -->
+            <el-table
+                border
+                :data="tableData3"
+                tooltip-effect="dark"
+                style="width: 100%"
+            >
+            <el-table-column
+                     prop="img"
+                     label="缩略图"
+                     align="center" 
+                     width="90px">
+                    <template slot-scope="scope" >
+                        <img v-show="scope.row.img != ''" :src="scope.row.img.url+'?x-oss-process=style/photo_128'" style="width: 70px;height: 70px;object-fit:cover" alt="">
+                        <img v-show="scope.row.img == ''" src="../../../assets/placeholder.png" width="70" height="70" alt="">
+                    </template>
+            </el-table-column>
+            <el-table-column
+                    prop="title"
+                    label="图片名称"
+                    align="center"
+                    width="220px"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="status"
+                    label="加密状态"
+                    align="center"
+                    width="80">
+                <template slot-scope="scope">
+                    <el-popover
+                        placement="top-start"
+                        width="80"
+                        trigger="hover"
+                        :content="scope.row.status == 0 ? '未加密' : scope.row.status == 1 ? '已加密' : scope.row.status == 2 ? '加密中' : scope.row.status == 3 ? '加密失败' : ''">
+                         <el-button type="text" slot="reference"> 
+                            <i v-show="scope.row.status == 1" class="iconfont icon-complete-1" style="color: #22FF37;font-size: 22px;font-weight: bold"></i>
+                            <i v-show="scope.row.status == 2" class="iconfont icon-time" style="color: #22FF37;font-size: 22px;font-weight: bold"></i>
+                            <i v-show="scope.row.status == 0" class="iconfont icon-Warning" style="color: #cccccc;font-size: 22px;font-weight: bold"></i>
+                            <i v-show="scope.row.status == 3" @click="anewWaterMark(scope.row.photoId)" class="iconfont icon-Warning" style="color: #cccccc;font-size: 22px;font-weight: bold"></i>
+                        </el-button>
+                    </el-popover>
+                </template>
+            </el-table-column>
+            <el-table-column
+                prop="orderStatus"
+                label="订单状态"
+                align="center"
+                width="100">
+                <template slot-scope="scope">
+                    <el-button type="text" :disabled="scope.row.orderStatus == '1' ? false : true" @click="watermark(scope.row.photoId)"> {{scope.row.orderStatus == '1' ? '未支付' : '已支付'}} </el-button>
+                </template>
+            </el-table-column>
+            <!-- <el-table-column
+                    prop="blockchain_status"
+                    label="上链状态"
+                    align="center"
+                    width="80">
+                <template slot-scope="scope">
+                    <el-popover
+                        placement="top-start"
+                        width="80"
+                        trigger="hover"
+                        :content="scope.row.blockchain_status == 1 ? '已申请' : scope.row.blockchain_status == 2 ? '已通过' : scope.row.blockchain_status == 3 ? '已拒绝' : scope.row.blockchain_status == 4 ? '上链失败' : scope.row.blockchain_status == 5 ? '上链成功' : scope.row.blockchain_status == 0 ? '未上链' : ''">
+                        <el-button type="text" slot="reference"> 
+                            <i v-show="scope.row.blockchain_status == 0" class="iconfont icon-Warning" style="color: #cccccc;font-size: 22px;font-weight: bold"></i>
+                            <i v-show="scope.row.blockchain_status == 2" class="iconfont icon-complete-1" style="color: #22FF37;font-size: 22px;font-weight: bold"></i>
+                            <i v-show="scope.row.blockchain_status == 1" class="iconfont icon-time" style="color: #22FF37;font-size: 22px;font-weight: bold"></i>
+                            <i v-show="scope.row.blockchain_status == 3 || scope.row.blockchain_status == 4 || scope.row.blockchain_status == 5" class="iconfont icon-Warning" style="color: #cccccc;font-size: 22px;font-weight: bold"></i>
+                        </el-button>
+                    </el-popover>
+                </template>
+            </el-table-column> -->
+            <el-table-column
+                    prop="info"
+                    label="密码"
+                    align="center">
+                <template slot-scope="scope">
+                    <el-popover
+                        placement="top-start"
+                        width="100"
+                        trigger="hover"
+                        :content="scope.row.info">
+                        <el-button type="text" slot="reference"><i class="iconfont icon-lock" style="font-size: 22px;font-weight: bold"></i></el-button>
+                    </el-popover>
+                    
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="updated_at"
+                    label="完成时间"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="remark"
+                    label="备注"
+                    align="center"
+                    width="220px"
+                    show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column
+                    prop="caozuo"
+                    label="操作"
+                    align="center"
+                    width="320">
+                     <template slot-scope="scope">
+                        <a :href="scope.row.url+'?x-oss-process=style/photo_max'" target="_blank" style="cursor:pointer;color:#409EFF;font-size:12px;margin-right:10px;text-decoration:none;"><i class="iconfont icon-look"></i><span class="deleteText">查看大图</span></a>
+                        <el-button type="text" size="small" @click="deleteWater(scope.row.id)">
+                            <i class="iconfont icon-delete"></i><span class="detailsText">删除</span>
+                        </el-button>
+                        <el-button type="text" size="small" @click="blockChain(scope.row.id)">
+                            <i class="iconfont icon-link"></i><span class="detailsText">上链</span>
+                        </el-button>
+                        <el-button type="text" size="small" @click="startMonitoring(scope.row.id)">
+                            <i class="iconfont icon-scanning"></i><span class="deleteText">监测</span>
+                        </el-button>
+                    </template>
+            </el-table-column>
+
+        </el-table>
+        <!--操作-->
+        <div class="subBtn">
+            <el-row>
+                <el-col :span="12">
+                    <!-- <div class="grid-content bg-purple">
+                        <el-checkbox v-model="checked"></el-checkbox>
+                        <el-button type="primary" style="margin-left: 10px">批量下载加密图片</el-button>
+                        <el-button type="primary" style="margin-left: 10px">批量发送加密图片</el-button>
+                    </div> -->
+                </el-col>
+                <el-col :span="12" style="float:right">
+                    <!--分页组件-->
+                    <paging  :pagination="pagination" @handleCurrentChange="currentPage"></paging>
+                </el-col>
+            </el-row>
+        </div>
+
+
+         <!--dialog-->
+        <el-dialog :visible.sync="dialogTableVisible" width="772px" class="dialog1">
+            <div style="min-height: 430px">
+                <div v-show="checkBtn" style="padding-top: 120px">
+                    <el-button type="primary" class="bigBtn"
+                               @click="isShowNewUpload">
+                        新上传图片
+                    </el-button>
+                    <br><br>
+                    <el-button type="primary"  class="bigBtn"
+                               @click="isShowCheckPicture">
+                        从图片库选择
+                    </el-button>
+                </div>
+                <!--  本地图片选择弹出框   -->
+                <div v-if="newUpload">
+                   <el-row :gutter="10">
+                    <el-col :span="4">
+                        <div style="text-align: right;margin-top: 10px">选择相册：</div>
+                    </el-col>
+                    <el-col :span="20" style="display:flex">
+                        <div>
+                           <el-select v-model="selectAlbum" placeholder="请选择">
+                            <el-option
+                                    v-for="item in photoOptions"
+                                    :key="item.id"
+                                    :label="item.name"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
+                        </div>
+                    </el-col>
+                    <el-col :span="4">
+                        <div style="text-align: right;margin-top: 20px">选择图片：</div>
+                    </el-col>
+                    <el-col :span="20">
+                        <div class="uploadBox">
+                            <input :id="id" type="file" class="inputFile" @change="preview" />
+                            <i class="iconfont icon-add addIcon"></i>
+                        </div>
+                        <div  class="uploadBox" v-if="isShowPreviewImg">
+                            <img :src="previewImgUrl" alt="">
+                        </div>
+                    </el-col>
+                    <el-col :span="4"></el-col>
+                    <el-col :span="20">
+                        <div style="margin-top: 20px;margin-left: 114px">
+                            <el-button type="primary" @click="uploadPhoto">上传</el-button>
+                        </div>
+                    </el-col>
+                </el-row>
+                </div>
+                <!--  图库弹出框    -->
+                <div v-if="checkPicture" class="picDialog" style="text-align: left">
+                     <el-form :inline="true" :model="formInline" class="demo-form-inline" style="margin-bottom:0px">
+                        <el-form-item label="选择相册：">
+                            <el-select v-model="formInline.region" placeholder="请选择"  >
+                                <el-option v-for="(item,index) in picList" :key="index" :label="item.name" :value="item.id"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="">
+                            <el-input v-model="formInline.keyword" placeholder="输入作品标题或说明" prefix-icon="el-icon-search"></el-input>
+                        </el-form-item>
+                            <el-button type="primary" style="position:relative;top:2px" @click="searchPic">搜索</el-button>
+                    </el-form>
+                    <div class="popTableBorder" style='height:340px;overflow-y:scroll;'>
+                        <ul class="picList" style="margin-top:20px;margin-bottom:20px">
+                            <li v-for="(item,index) in photoList" :key="index" @click="getPicid(item.url,item.title,index,item.id)">
+                                <img :src="item.url+'?x-oss-process=style/photo_128'" alt="选择证据图片">
+                                <div class="picTitle">{{item.title}}</div>
+                                <div class="imgBg" :data="item.url" v-show="picOpacity == true && index == picIndex"></div>
+                                <div class="imgIcon" :data="item.url" v-show="picOpacity == true && index == picIndex"><el-button type="success" icon="el-icon-check" circle></el-button></div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="picPage">
+                         <el-pagination
+                                @current-change="handleCurrentChanges"
+                                :current-page="current_pages"
+                                :page-size="per_page"
+                                small
+                                background
+                                layout="prev, pager, next"
+                                :total="total">
+                        </el-pagination>
+                    </div>
+                    <div class="" style="text-align:right">
+                        <el-button type="text" @click="resetThis" >取消</el-button>
+                        <el-button type="primary" @click="picSubmit" >确认选择</el-button>
+                    </div>
+                </div>
+                 <!--  支付 弹出框   -->
+                <div class="payBox" v-if="userPay">
+                    <div class="payTitle">确认付款</div>
+                    <div class="payNumber">¥ {{order.total}}</div>
+                    <table class="payTable">
+                        <tr>
+                            <td class="tableLeft">订单金额：</td>
+                            <td>¥ {{order.total}}</td>
+                        </tr>
+                        <tr>
+                            <td class="tableLeft">订单号：</td>
+                            <td>{{order.no}}</td>
+                        </tr>
+                        <tr>
+                            <td class="tableLeft">账户余额：</td>
+                            <td><span>{{sum}}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="tableLeft">产品名称：</td>
+                            <td>{{isUpwarter != '' ? '图片加密' : '图片上链'}}</td>
+                        </tr>
+                    </table>
+                    <el-row style="margin-top: 30px">
+                        <el-col :span="12">
+                            <div class="grid-content" style="text-align: right;margin-right: 16px">
+                                <el-button :type="sum > order.total ? 'primary' : 'disabled'" :disabled="sum < order.total ? true : false" @click="gotoPay(order.id)" >确认提交</el-button>
+                            </div>
+                        </el-col>
+                        <el-col :span="12">
+                            <div class="grid-content" style="text-align: left;margin-left: 16px">
+                                <el-button type="primary" @click="gotoRecharge">去充值</el-button>
+                            </div>
+                        </el-col>
+                    </el-row>
+                </div>
+            </div>
+        </el-dialog>
+
+    </div>
+</template>
+
+<script>
+    import titleInfo from '@/./components/Title'
+    import paging from '@/./components/Paging'
+    export default {
+        name: "encryption",
+        data() {
+            return {
+                token:localStorage.getItem("token") ? localStorage.getItem("token") : sessionStorage.getItem("token"), //获取token
+                userId:sessionStorage.getItem("userId"),//获取userid
+                /*子组件数据*/
+                titleMeanObj: {
+                    topTitle: '加密',
+                    btnText: '新建加密',
+                    starDate: '', //开始时间
+                    endDate: '', //结束时间
+                    searchVal: '', //搜索内容
+                },
+                /*table data*/
+                tableData3: [],
+                multipleSelection: [],
+                checked: false,
+                dialogTableVisible: false,
+                checkBtn: true,
+                newUpload: false,
+                checkPicture: false,
+                checkedList: [], //加密内容的list
+                checkList: ['姓名', '作品编号', '手机号', '邮编'], //加密内容的list
+                encryptionContent: '',
+                checkedPicture: false, //是否选择的加密图片
+                pictureName: '', //图片名称
+                pictureNote: '', //图片备注
+                fileList2: [],
+                pagination: [],//分页
+
+                //选择本地图片
+                selectAlbum: '', //选择相册
+                photoOptions: [],
+                isShowPreviewImg: false, //是否显示预览图片
+                id: 'upload',
+                region: 'oss-cn-beijing',
+                picOSSList:'',//oss上传之后返回的参数
+                picFileNme:'',//上传的文件名
+                photoId:'',
+
+                //图片需要的字段
+                dialogPicShowList:false,//图片弹出框
+                photos:[],//图片列表
+                picId:'',//图片Id
+                picUrl:'',//一条图片的数据url
+                picOpacity:false,//鼠标移入事件
+                picIndex:'',//点击图片获取index
+                photoList:[],//获取相册列表
+                picList:[],//相册列表
+                dialogShwo:false,
+                modalVisible:false,
+                formInline: {  //图片弹出框搜索的字段 
+                    user: '',
+                    region: '',
+                    keyword: '',
+                },
+                //弹出框分页
+                total: null,
+                current_pages: 1,
+                per_page: null,
+                indexPages: 1,//当前页
+
+                //订单弹出框
+                userPay:false,//弹出框事件
+                location:'',//订单id
+                order:'',//订单内容
+                sum:'',//余额
+                isUpwarter:0,//判断上链还是加密
+            }
+
+        },
+        watch: {
+            checked(newVal, oldVal) {
+                if (newVal === true) {
+                    this.$refs.multipleTable.toggleAllSelection(this.tableData3);
+                } else if (oldVal) {
+                    this.$refs.multipleTable.clearSelection();
+                }
+            },
+        },
+        components: {titleInfo,paging},
+        mounted() {
+            this.watermarkList()
+            this.getPhotoList()
+        },
+        methods: {
+
+            //表格选中方法
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            
+            //弹出框里的分页
+            handleCurrentChanges(val){
+                this.indexPages = val
+                this.getPhotoAlbum()
+            },
+            /*
+            * 接受子组件的事件派发
+            * */
+            clickEvent() {
+                if (this.checkBtn === false) {
+                    this.dialogTableVisible = true
+                    this.checkBtn = true
+                    this.newUpload = false
+                    this.checkPicture = false
+                    this.userPay = false
+                } else {
+                    this.dialogTableVisible = true
+                }
+            },
+
+             //搜索图片
+            searchPic(){
+                this.indexPages = 1
+                this.getPhotoAlbum();
+            },
+
+            //取消选中
+            resetThis(){
+                this.picTitle = '';
+                this.picUrl = '';
+                this.picIndex = '';
+                this.dialogTableVisible = false
+                this.checkPicture = false
+                this.dialogPicShowList = false
+                this.$emit("reset")
+            },
+
+            //获取图片id
+            getPicid(url,title,index,id){
+                this.picTitle = title;
+                this.picUrl = url;
+                this.picId = id;
+                this.picIndex = index;
+                this.picOpacity = true;
+            },
+
+            //确认选择图片
+            picSubmit(){ 
+                this.dialogTableVisible = false;
+                this.picFileNme = '';
+                this.watermark(this.picId)
+            },
+
+            //获取相册列表
+            getPhotoList(){
+                let _this = this;
+                let url = `/users/${_this.userId}/galleries`
+                _this.$http.get(url,{
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    _this.picList = res.data.data
+                    _this.photoOptions = res.data.data
+                }).catch((error)=>{
+                    console.log(error)
+                })
+            },
+
+            //获取图片列表
+            getPhotoAlbum(){
+                let _this = this;
+                //清空图片选中事件
+                _this.picOpacity = false
+                let url = '';
+                if(_this.formInline.region != ''){
+                    url = `/galleries/${_this.formInline.region}/photos?include=user,gallery&page_size=16&keyword=${_this.formInline.keyword}&page=${_this.indexPages}`;
+                } else if(_this.formInline.keyword != '') {
+                    url = `/photos?keyword=${_this.formInline.keyword}&page=${_this.indexPages}&page_size=16`; 
+                } else {
+                    url = `/photos?include=user,gallery&page=${_this.indexPages}&page_size=16`;
+
+                }
+                _this.$http.get(url,{
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Bearer '+_this.token
+                    }
+                }).then((res)=>{
+                    // _this.photoOptions = res.data.data;
+                    _this.photoList = [];
+                    res.data.data.map((i)=>{
+                        _this.photoList.push({
+                            url:i.url,
+                            id:i.id,
+                            title:i.title,
+                            desc:i.desc
+                        })
+                    })
+                    //图片分页
+                    _this.per_page = res.data.meta.pagination.per_page
+                    _this.total = res.data.meta.pagination.total
+                    _this.current_page = res.data.meta.pagination.current_page
+                }).catch((error)=>{
+                    console.log(error)
+                })
+            },
+
+            //获取上传图片预览url
+            getObjectURL(file){
+                let url = null;
+                if(window.createObjectURL != undefined){
+                    url = window.createObjectURL(file);//basic
+                }else if(window.URL != undefined){
+                    url = window.URL.createObjectURL(file);
+                }else if(window.webkitURL != undefined){
+                    url = window.webkitURL.createObjectURL(file);
+                }
+                return url;
+            },
+
+            //预览图片
+            preview(){
+                let _this = this
+                let files = document.getElementById(_this.id)
+                _this.isShowPreviewImg = true
+                //上传之前的预览
+                _this.previewImgUrl = _this.getObjectURL(files.files[0])
+            },
+
+            //随机文件名字
+            randomString(len) {
+                len = len || 32;
+                let chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
+                let maxPos = chars.length;
+                let pwd = '';
+                for (let i = 0; i < len; i++) {
+                    pwd += chars.charAt(Math.floor(Math.random() * maxPos));
+                }
+                return pwd;
+            },
+
+            //提交oss图片url
+            putOssUrl(name,picUrl,id){
+                let _this = this
+                let url = ''
+                if(id){
+                    url = `/galleries/${id}/photos`
+                } else{
+                    url = `/photos`
+                }
+                let params = new URLSearchParams
+                params.append('title',name) //上传文件的文件名
+                params.append('url',picUrl)     //oss返回的url
+                params.append('is_private','1') //私有的
+                params.append('desc',id)  //描述暂时也用文件名
+                _this.$http.post(url,params,{
+                    headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this._this.token}`
+                    }
+                }).then((res)=>{
+                    if(res.status===201){
+                        _this.watermark(res.headers.location)
+                    } else {
+                        _this.watermark(res.headers.location)
+                    }
+                }).catch((error)=>{
+                     
+                })
+            },
+
+            //上传图片
+            uploadPhoto(){
+                let _this = this
+                _this.$http.get('/aliyun/oss/photo', {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    //console.log(res,'-----')
+                    let OSS = require('ali-oss')
+                    let files = document.getElementById(_this.id)
+                    let client = new OSS({
+                        region: _this.region,
+                        accessKeyId: res.data.AccessKeyId,
+                        accessKeySecret: res.data.AccessKeySecret,
+                        stsToken: res.data.SecurityToken,
+                        bucket: process.env.VUE_APP_OSS_BUCKET_PHOTO
+                    });
+                    if(files.files) {
+                        const fileLen = document.getElementById(_this.id).files
+                        //上传之前的预览
+                        _this.previewImgUrl = _this.getObjectURL(files.files[0])
+                        //const resultUpload = [];
+                        for (let i = 0; i < fileLen.length; i++) {
+                            let file = fileLen[i]
+                            let storeAs = `users/${_this.userId}/${_this.randomString(20)}.${file.name.split('.').pop()}`
+                            //storeAs表示上传的object name , file表示上传的文件
+                            client.multipartUpload(storeAs, file).then((res)=>{
+                                _this.$message.success('图片上传成功')
+                                _this.picOSSList = res;
+                                _this.putOssUrl(file.name,res.name,_this.selectAlbum)
+                                _this.previewImgUrl = '' //上传成功清除预览图片
+                                _this.isShowPreviewImg = false //上传成功清除预览图片
+                                _this.dialogTableVisible = false //关闭弹出框
+                                _this.newUpload = false //关闭弹出框
+                            }).catch((err)=>{
+                                _this.$message.error('上传失败,请重新上传')
+                            });
+                        }
+                    }
+                })
+            },
+
+            //删除加密
+            deleteWater(id){
+                let _this = this
+                let params = new URLSearchParams()
+                _this.$http.delete('/photos/'+id+'/watermark',{
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    this.watermarkList()
+                    _this.$message.success('删除成功')
+                }).catch((error)=>{
+                     _this.$message.error(error.response.data.message)
+                })
+            },
+
+            //搜索
+            search(){
+                this.indexPage = 1
+                this.watermarkList()
+            },
+
+            //水印加密列表
+            watermarkList(){
+                let _this = this
+                let url = `/photo_watermarks?include=photo,orderItem.order`
+                let params = {
+                    begin_at:_this.titleMeanObj.endDate,
+                    end_at:_this.titleMeanObj.starDate,
+                    keyword:_this.titleMeanObj.searchVal,
+                    page:_this.indexPage,
+                    page_size:15
+                }
+                _this.$http.get(url,{
+                    params,
+                    headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    _this.tableData3 = []
+                    res.data.data.map((i)=>{
+                        _this.tableData3.push({
+                            blockchain_status:i.photo.data.blockchain_status,
+                            desc:i.desc,
+                            gallery:i.gallery,
+                            id:i.photo.data.id,
+                            is_private:true,
+                            out_id:i.out_id,
+                            status:i.status,
+                            tags:i.tags,
+                            info:i.info,
+                            title:i.photo.data.title,
+                            updated_at:i.updated_at,
+                            url:i.photo ? i.photo.data.url : '',
+                            img:i.photo.data,
+                            watermark_status:i.watermark_status,
+                            orderStatus:i.orderItem.data.order.data.status,
+                            photoId:i.photo.data.id,
+                        })
+                    })
+                     //分页
+                    _this.pagination = res.data.meta.pagination;
+                }).catch((error)=>{
+
+                })
+            },
+
+            //icon 水印加密
+            //加密
+            watermark(id){
+                let _this = this
+                let url = `/photos/${id}/watermark`
+                let params = new URLSearchParams
+
+                _this.$http.post(url,params,{
+                    headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    _this.getBalance() //获取余额
+                    _this.watermarkList() //获取列表
+                    if(res.data.order_id){
+                        _this.payOrder(res.data.order_id) //获取订单
+                    } else {
+                        _this.payOrder(res.data.data.order_id)//获取订单
+                    }
+                    _this.checkPicture = false //关闭选择图片弹出框
+                    _this.isUpwarter = 1//判断加密还是上链
+                    _this.userPay = true //支付弹出框
+                }).catch((error)=>{
+                    _this.$message.error(error.response.data.message)
+                })
+            },
+
+            //重新加密
+            anewWaterMark(id){
+                let _this = this
+                let url = `/photos/${id}/watermark/retry`
+                let params = new URLSearchParams()
+                 _this.$http.get(url,params,{
+                    headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    _this.$message.success('从新加密')
+                    setTimeout(() => {
+                        _this.watermarkList()
+                    },1000);
+                }).catch((error)=>{
+                    _this.$message.error(error.response.data.message)
+                })
+            },
+
+            //图片上链
+            blockChain(id){
+                let _this = this;
+                let params = new URLSearchParams()
+                let url = '' 
+                if(id){
+                    url = `/photos/${id}/photo_blockchain`
+                } else {
+                    url = `/photos/${_this.picId}/photo_blockchain`
+                }
+                _this.$http.post(url,params,{
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    _this.payOrder(id)
+                }).catch((error)=>{
+                    _this.$message.error(error.response.data.message)
+                })
+            },
+
+           //开始监测
+            startMonitoring(id,name){
+                let _this = this
+                let params = new URLSearchParams
+                params.append('photo_id',id) //图片id
+                params.append('name',name) //监测名称
+                _this.$http.post('/monitor_services',params,{
+                    headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }
+                }).then((res)=>{
+                    if(res.status===201){
+                        _this.$message.success('新建监测成功')
+                    }
+                }).catch((error)=>{
+                     _this.$message.error(error.response.data.message)
+                })
+                
+            },
+
+            /**
+             * 订单支付
+             * 
+             */
+             //订单
+            payOrder(id){
+                let _this = this;
+                _this.$http.get('/orders/'+id+'?include=items',{
+                    headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Bearer '+_this.token
+                    }
+                }).then((res)=>{
+                    _this.order = res.data.data;
+                    _this.getBalance()//请求余额
+                    //订单弹出框显示隐藏
+                    _this.dialogTableVisible = true
+                    _this.checkBtn = false
+                    _this.userPay = true;
+                }).catch((error)=>{
+                    _this.$message.error(error.response.data.message)
+                })
+            },
+
+            //余额
+            getBalance(){
+                let _this = this;
+                _this.$http.get('/users/'+_this.userId+'/transactions/sum',{
+                     headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Bearer '+_this.token
+                    }
+                }).then((res)=>{
+                    _this.sum = res.data.sum;
+                })
+            },
+            
+            //去充值
+            gotoRecharge(){
+                this.$router.push('/index/recharge');
+            },
+
+            //支付
+            gotoPay(orderNo){
+                let _this = this;
+                let params = new URLSearchParams()
+                _this.$http.post('/orders/'+orderNo+'/pay',params,{
+                     headers:{
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${_this.token}`
+                    }}).then((res)=>{
+                        //订单弹出框显示隐藏
+                        _this.dialogTableVisible = false
+                        _this.$message.success('付款成功')
+                        setTimeout(function(){
+                            _this.watermarkList();//刷新列表
+                       },1000)
+                }).catch((error)=>{
+                    _this.$message.error(error.response.data.message)
+                })
+            },
+
+
+            //分页方法
+            currentPage(val) {
+                this.indexPage = val;
+                this.watermarkList();
+            },
+            isShowNewUpload() {
+                this.checkBtn = false
+                this.newUpload = true
+            },
+            isShowCheckPicture() {
+                this.checkBtn = false
+                this.checkPicture = true
+                this.indexPages = 1
+                this.getPhotoAlbum()
+                this.getPhotoList()
+            },
+            //图片上传回调
+            handlePreview(file){
+                console.log(file)
+            },
+            
+            handleRemove(file, fileList) {
+                console.log(file,fileList)
+            }
+        }
+    }
+</script>
+
+<style scoped lang="stylus">
+
+    blueColor = #1884EC
+    yellowColor = #FF7E00
+    tableThColor = #F6F7FC
+
+    .el-table >>> td
+        padding 8px 0 0 0
+        i
+                font-size 17px
+                margin-right 5px
+            .deleteText, .detailsText
+                position relative
+                top -2px
+            button.el-button--small
+                padding-top 8px
+                padding-bottom 8px
+                padding-left 0px
+                padding-right 0px
+        .el-button.is-circle
+                height 23px
+                width 23px
+                position relative
+                padding 0px
+        .el-button.is-circle >>> .el-icon-check
+                position relative
+                top -8px
+                left -10px
+    .el-table >>> th
+        background-color tableThColor!important
+        color #555
+        padding 8px 0
+        font-weight 400
+    .upload-demo >>> .el-upload-dragger
+        width 760px
+        height 220px
+        .el-icon-upload
+             margin-top 50px
+    .upload-demo >>> .el-upload-list
+            margin-left -15px !important
+    .upload-demo >>> .el-upload-list__item
+            width 140px
+            float left
+            margin-left 15px
+    .upload-demo >>> .selectBtn
+            position absolute
+            bottom 30px
+            right 100px
+    .uploadBtn
+            position absolute 
+            bottom 66px
+            right 50px
+    .subBtn
+        margin-left 10px
+        margin-top 20px
+        .el-button--primary
+            border-color blueColor
+            background-color blueColor
+        .el-button
+            padding 9px 18px
+        .el-dialog__body
+            width 100%
+            text-align center
+    .el-checkbox >>> .el-checkbox__label
+        font-weight 400
+    .el-upload .el-upload--text .el-upload-dragger
+        height 250px !important
+    .el-dialog__header >>> .el-dialog__headerbtn
+        position absolute
+        top 0
+        right 0
+        background-color #D5D5D5
+    .dialog1
+        text-align center
+
+        .bigBtn
+            background-color #fff
+            color blueColor
+            width 234px
+            height 64px
+            font-size 18px
+            font-weight 400
+        .bigBtn >>> :hover
+            color blueColor
+        .dialogLeftText
+            padding-top 10px
+        .layout1
+            margin-bottom 20px
+        .screenList
+            line-height 30px
+            width 260px
+            margin-top -6px
+        .payBox
+            .payTitle
+                font-size 24px
+                font-family MicrosoftYaHei
+                font-weight 400
+                color rgba(85,85,85,1)
+            .payNumber
+                font-size 54px
+                font-family MicrosoftYaHei
+                font-weight 400
+                color rgba(85,85,85,1)
+                margin-top 30px
+            .payTable
+                border-collapse collapse
+                width 100%
+                border 1px solid #eee
+                margin-top 39px
+                td
+                    border 1px solid #eee
+                    height: 32px;
+                    text-align left
+                    padding 0 10px
+                .tableLeft
+                    text-align right
+                span
+                    color #ff0000
+
+    .el-input__inner
+        height 35px
+        line-height 35px
+        font-size 14px
+        box-shadow none
+        border 1px solid #e9e9e9
+        width 260px
+
+    .el-input__inner:focus
+        border-color blueColor
+        box-shadow none
+        transition-duration .5s
+
+    .leftImgBox
+        img
+            width 100%
+
+    .el-button--primary
+        border-color #1884EC
+        background-color #1884EC
+
+    .el-button
+        padding 9px 18px
+
+    .el-dialog__body
+        height 400px;
+    .el-radio
+        font-weight 400px
+
+
+    .picDialog 
+            font-size 14px
+        .picDialog  >>> .el-form-item
+            margin-bottom 20px
+            height 35px
+        .picDialog >>> .el-button--primary
+            height 35px
+            span
+                position relative
+                top -2px
+        .picDialog >>> .el-select
+            width 120px
+            height 35px
+            .el-input__inner
+                width 120px
+                height 35px
+        .picDialog >>> .el-input__inner
+            width 200px
+        .picDialog >>> .el-input__prefix
+            .el-input__icon
+                line-height 35px
+            .picPage
+                text-align left
+            .picPage >>> button
+                height 20px
+                width 20px
+                display inline-block
+                background #1884EC
+        .popTableBorder
+                border 1px dashed #cccccc
+                padding 20px
+                margin-bottom 20px
+            .picList
+                width 100%
+                list-style none
+                margin 0px
+                li
+                    box-sizing border-box
+                    width 156px
+                    height 186px
+                    cursor pointer
+                    margin 6px
+                    float left
+                    img
+                        width 156px
+                        height 156px
+                        border-radius 8px
+                    .imgBg
+                        width 156px
+                        height 156px
+                        background #000
+                        opacity 0.5
+                        border-radius 8px
+                        position relative
+                        top -186px
+                    .imgIcon
+                        display inline-block
+                        width 40px
+                        height 40px
+                        position relative
+                        top -290px
+                        left 60px
+                        z-index 999
+                    .picTitle
+                        display inline-block
+                        height 25px
+                        width 150px
+                        line-height 25px
+                        overflow hidden
+                        text-overflow ellipsis
+                        white-space nowrap
+                    .el-button
+                        padding 15px
+            .uploadBox
+                float left
+                margin-right 10px
+                position relative
+                margin-top 20px
+                width 100px
+                height 100px
+                border 1px solid #cccccc
+                border-radius 4px
+                text-align center
+                img
+                    height 100%
+                .inputFile
+                    position absolute
+                    left 0
+                    top 0
+                    width 100px
+                    height 100px
+                    opacity 0
+                    cursor pointer
+                    z-index 1
+                .addIcon
+                    position absolute
+                    left 0
+                    top 0
+                    width 100px
+                    height 100px
+                    line-height 100px
+                    text-align center
+                    font-size 60px
+
+
+</style>
